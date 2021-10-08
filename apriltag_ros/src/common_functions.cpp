@@ -31,7 +31,7 @@
 
 #include "apriltag_ros/common_functions.h"
 #include "image_geometry/pinhole_camera_model.h"
-
+#include "geometry_msgs/PointStamped.h"
 #include "common/homography.h"
 #include "tagStandard52h13.h"
 #include "tagStandard41h12.h"
@@ -343,9 +343,19 @@ AprilTagDetectionArray TagDetector::detectTags (
 
     // Add the detection to the back of the tag detection array
     AprilTagDetection tag_detection;
+
+
     tag_detection.pose = tag_pose;
     tag_detection.id.push_back(detection->id);
     tag_detection.size.push_back(tag_size);
+    for (int k = 0; k < 4; k ++) {
+      geometry_msgs::PointStamped ros_img_point;
+      ros_img_point.point.x = standaloneTagImagePoints[k].x;
+      ros_img_point.point.y = standaloneTagImagePoints[k].y;
+      ros_img_point.point.z = 0;
+      ros_img_point.header = tag_detection.pose.header;
+      tag_detection.image_points.push_back(ros_img_point);
+    }
     tag_detection_array.detections.push_back(tag_detection);
     detection_names.push_back(standaloneDescription->frame_name());
   }
@@ -379,9 +389,19 @@ AprilTagDetectionArray TagDetector::detectTags (
 
       // Add the detection to the back of the tag detection array
       AprilTagDetection tag_detection;
+
       tag_detection.pose = bundle_pose;
       tag_detection.id = bundle.bundleIds();
       tag_detection.size = bundle.bundleSizes();
+        for (int k = 0; k < 4; k ++) {
+            geometry_msgs::PointStamped ros_img_point;
+            ros_img_point.point.x = bundleImagePoints[bundleName][k].x;
+            ros_img_point.point.y = bundleImagePoints[bundleName][k].y;
+            ros_img_point.point.z = 0;
+            ros_img_point.header = tag_detection.pose.header;
+            tag_detection.image_points.push_back(ros_img_point);
+            tag_detection.name=bundle.name();
+        }
       tag_detection_array.detections.push_back(tag_detection);
       detection_names.push_back(bundle.name());
     }
@@ -478,12 +498,14 @@ void TagDetector::addImagePoints (
                                  // frame has y-axis pointing DOWN
                                  // while we use the tag local frame
                                  // with y-axis pointing UP
+
   for (int i=0; i<4; i++)
   {
     // Homography projection taking tag local frame coordinates to image pixels
     double im_x, im_y;
     homography_project(detection->H, tag_x[i], tag_y[i], &im_x, &im_y);
     imagePoints.push_back(cv::Point2d(im_x, im_y));
+
   }
 }
 
@@ -513,6 +535,14 @@ Eigen::Matrix4d TagDetector::getRelativeTransform(
   T.col(3).head(3) <<
       tvec.at<double>(0), tvec.at<double>(1), tvec.at<double>(2);
   T.row(3) << 0,0,0,1;
+
+//    Eigen::Matrix3d R180;
+//    R180 << -1, 0, 0, 0, -1, 0, 0, 0, 1;
+//  Eigen::Matrix4d rot_180_z;
+//    rot_180_z.topLeftCorner(3, 3) = R180;
+//    rot_180_z.col(3).head(3) <<0, 0, 0;
+//    rot_180_z.row(3) << 0,0,0,1;
+//    T = T*rot_180_z;
   return T;
 }
 

@@ -46,7 +46,7 @@
 #include "apriltag_ros/common_functions.h"
 
 #include <memory>
-
+#include <std_srvs/Empty.h>
 #include <nodelet/nodelet.h>
 
 namespace apriltag_ros
@@ -59,15 +59,18 @@ class ContinuousDetector: public nodelet::Nodelet
   ~ContinuousDetector() = default;
 
   void onInit();
-
+  bool startDetectionCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response& response);
+  bool stopDetectionCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response& response);
   void imageCallback(const sensor_msgs::ImageConstPtr& image_rect,
                      const sensor_msgs::CameraInfoConstPtr& camera_info);
 
  private:
+  bool do_detection_;
   std::shared_ptr<TagDetector> tag_detector_;
   bool draw_tag_detections_image_;
   cv_bridge::CvImagePtr cv_image_;
-
+  ros::ServiceServer start_detect_service_;
+  ros::ServiceServer stop_detect_service_;
   std::shared_ptr<image_transport::ImageTransport> it_;
   image_transport::CameraSubscriber camera_image_subscriber_;
   image_transport::Publisher tag_detections_image_publisher_;

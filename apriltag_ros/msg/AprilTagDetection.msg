@@ -6,9 +6,10 @@ int32[] id
 # this is a vector containing the sizes of each tag in the bundle, in the same
 # order as the IDs above.
 float64[] size
-
+string name
 # Pose in the camera frame, obtained from homography transform. If a standalone
 # tag, the homography is from the four tag corners. If a tag bundle, the
 # homography is from at least the four corners of one member tag and at most the
 # four corners of all member tags.
+geometry_msgs/PointStamped[] image_points
 geometry_msgs/PoseWithCovarianceStamped pose

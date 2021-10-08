@@ -45,12 +45,21 @@ void ContinuousDetector::onInit ()
   tag_detector_ = std::shared_ptr<TagDetector>(new TagDetector(pnh));
   draw_tag_detections_image_ = getAprilTagOption<bool>(pnh, 
       "publish_tag_detections_image", false);
+
+  do_detection_ = true;
+
   it_ = std::shared_ptr<image_transport::ImageTransport>(
       new image_transport::ImageTransport(nh));
-
+  start_detect_service_ =
+            nh.advertiseService("start_tag_detection",
+                                &ContinuousDetector::startDetectionCallback, this);
+  stop_detect_service_ =
+            nh.advertiseService("stop_tag_detection",
+                                &ContinuousDetector::stopDetectionCallback, this);
   camera_image_subscriber_ =
       it_->subscribeCamera("image_rect", 1,
                           &ContinuousDetector::imageCallback, this);
+
   tag_detections_publisher_ =
       nh.advertise<AprilTagDetectionArray>("tag_detections", 1);
   if (draw_tag_detections_image_)
@@ -58,11 +67,21 @@ void ContinuousDetector::onInit ()
     tag_detections_image_publisher_ = it_->advertise("tag_detections_image", 1);
   }
 }
-
+bool ContinuousDetector::startDetectionCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response& response) {
+    do_detection_ = true;
+    return true;
+}
+bool ContinuousDetector::stopDetectionCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response& response) {
+    do_detection_ = false;
+    return true;
+}
 void ContinuousDetector::imageCallback (
     const sensor_msgs::ImageConstPtr& image_rect,
     const sensor_msgs::CameraInfoConstPtr& camera_info)
 {
+    if (!do_detection_) {
+        return;
+    }
   // Lazy updates:
   // When there are no subscribers _and_ when tf is not published,
   // skip detection.
@@ -95,7 +114,8 @@ void ContinuousDetector::imageCallback (
   if (draw_tag_detections_image_)
   {
     tag_detector_->drawDetections(cv_image_);
-    tag_detections_image_publisher_.publish(cv_image_->toImageMsg());
+      sensor_msgs::ImagePtr image = cv_image_->toImageMsg();
+    tag_detections_image_publisher_.publish(image);
   }
 }
 

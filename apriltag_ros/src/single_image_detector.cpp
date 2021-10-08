@@ -55,15 +55,17 @@ bool SingleImageDetector::analyzeImage(
     apriltag_ros::AnalyzeSingleImage::Response& response)
 {
 
-  ROS_INFO("[ Summoned to analyze image ]");
-  ROS_INFO("Image load path: %s",
-           request.full_path_where_to_get_image.c_str());
-  ROS_INFO("Image save path: %s",
-           request.full_path_where_to_save_image.c_str());
+//  ROS_INFO("[ Summoned to analyze image ]");
+//  ROS_INFO("Image load path: %s",
+//           request.full_path_where_to_get_image.c_str());
+//  ROS_INFO("Image save path: %s",
+//           request.full_path_where_to_save_image.c_str());
 
   // Read the image
   cv::Mat image = cv::imread(request.full_path_where_to_get_image,
                              cv::IMREAD_COLOR);
+//  cv::imshow("Tag input image",image);
+//  cv::waitKey(1);
   if (image.data == NULL)
   {
     // Cannot read image
@@ -88,7 +90,7 @@ bool SingleImageDetector::analyzeImage(
   tag_detector_.drawDetections(loaded_image);
   cv::imwrite(request.full_path_where_to_save_image, loaded_image->image);
 
-  ROS_INFO("Done!\n");
+//  ROS_INFO("Done!\n");
 
   return true;
 }

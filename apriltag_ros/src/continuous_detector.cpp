@@ -115,6 +115,7 @@ void ContinuousDetector::imageCallback (
   {
     tag_detector_->drawDetections(cv_image_);
       sensor_msgs::ImagePtr image = cv_image_->toImageMsg();
+
     tag_detections_image_publisher_.publish(image);
   }
 }
